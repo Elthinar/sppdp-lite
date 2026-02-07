@@ -5,15 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPPDP Lite - Clinical Simulator</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #004a99; text-align: center; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 650px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #004a99; text-align: center; margin-top: 0; }
         .hidden { display: none; }
-        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background: #004a99; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #000; color: #00ff00; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; }
-        .ecg-box { width: 100%; margin: 15px 0; border: 2px solid #ddd; }
-        .q-box { margin-top: 20px; padding: 15px; border-left: 4px solid #004a99; background: #f9f9f9; }
-        textarea { width: 100%; height: 80px; margin-top: 10px; border-radius: 4px; border: 1px solid #ccc; }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background: #004a99; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: #003366; }
+        .btn-secondary { background: #6c757d; }
+        .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #1a1a1a; color: #00ff00; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; margin: 15px 0; }
+        .ecg-box { width: 100%; margin: 15px 0; border: 3px solid #333; border-radius: 4px; display: block; }
+        .q-box { margin-top: 20px; padding: 15px; border-left: 5px solid #004a99; background: #f8f9fa; border-radius: 0 8px 8px 0; }
+        .scene-text { line-height: 1.6; font-size: 1.1em; background: #e9ecef; padding: 15px; border-radius: 8px; }
+        textarea { width: 100%; height: 100px; margin-top: 10px; border-radius: 8px; border: 1px solid #ced4da; padding: 10px; box-sizing: border-box; font-size: 16px; }
+        .status-bar { text-align: center; font-size: 0.9em; color: #666; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -22,7 +26,7 @@
     <h1>SPPDP Lite</h1>
     
     <div id="selection-screen">
-        <p>Select a Phase to begin training:</p>
+        <div class="status-bar">Select your training phase:</div>
         <button class="btn" onclick="loadBatch(1)">Phase 1: Resuscitation (Wk 1-2)</button>
         <button class="btn" onclick="loadBatch(2)">Phase 2: Medical (Wk 6-12)</button>
         <button class="btn" onclick="loadBatch(3)">Phase 3: Trauma/Neuro (Wk 13-23)</button>
@@ -30,8 +34,8 @@
     </div>
 
     <div id="sim-screen" class="hidden">
-        <h3 id="scenario-title">Patient Presentation</h3>
-        <div id="scene-description"></div>
+        <div class="status-bar" id="phase-indicator">Clinical Simulation in Progress</div>
+        <div id="scene-description" class="scene-text"></div>
         
         <div class="vitals-grid" id="vitals">
             <div>HR: <span id="v-hr">--</span></div>
@@ -43,9 +47,11 @@
         <img id="ecg-display" class="ecg-box hidden" src="" alt="ECG Strip">
 
         <div id="question-area" class="q-box">
-            <p id="current-question-text"></p>
-            <textarea id="answer-input" placeholder="Type your response here..."></textarea>
-            <button class="btn" onclick="nextQuestion()">Submit Answer</button>
+            <strong id="current-question-num">Question 1 of 8</strong>
+            <p id="current-question-text" style="margin-top: 5px;"></p>
+            <textarea id="answer-input" placeholder="Enter clinical rationale..."></textarea>
+            <button class="btn" onclick="nextQuestion()">Submit Response</button>
+            <button class="btn btn-secondary" onclick="location.reload()">Reset Scenario</button>
         </div>
     </div>
 </div>
@@ -55,36 +61,38 @@
     let currentScenario = null;
     let questionStep = 0;
 
-    // These match the questions we designed
     const questions = [
-        "1. Identify scene hazards and how you would address them.",
-        "2. Any clarifying questions or further assessments needed?",
-        "3. What is your provisional diagnosis?",
-        "4. Justify your provisional diagnosis.",
-        "5. What differential diagnosis have you discarded?",
-        "6. What is your treatment/intervention plan?",
-        "7. What is your extrication plan?",
-        "8. What is your disposition plan?"
+        "Identify scene hazards and how you would address them.",
+        "Any clarifying questions or further assessments needed?",
+        "What is your provisional diagnosis?",
+        "Justify your provisional diagnosis using clinical findings.",
+        "What differential diagnoses have you considered and discarded?",
+        "What is your treatment/intervention plan (per DTP/CPG)?",
+        "What is your extrication plan?",
+        "What is your disposition plan (Transport/Consult/ROSC)??"
     ];
 
     async function loadBatch(batchNum) {
         try {
-            const response = await fetch(`logic/logic_map_batch${batchNum}.json`);
+            // Using ./ to ensure correct relative path on GitHub Pages
+            const response = await fetch(`./logic/logic_map_batch${batchNum}.json`);
+            if (!response.ok) throw new Error("Network response was not ok");
+            
             currentBatchData = await response.json();
             startRandomScenario();
         } catch (e) {
-            alert("Error loading logic file. Ensure the 'logic' folder exists and contains the .json files.");
+            console.error("Fetch error:", e);
+            alert("Error loading logic. Ensure folders are named 'logic' and 'images' (lowercase) on GitHub.");
         }
     }
 
     function startRandomScenario() {
-        // Simple logic to pick a random week/branch from the JSON
         const keys = Object.keys(currentBatchData);
         const randomKey = keys[Math.floor(Math.random() * keys.length)];
         const weekData = currentBatchData[randomKey];
         
-        // Handle Master Randomizer Branches
-        if (weekData.branches) {
+        // Check if it's a Master Randomizer with branches
+        if (weekData.branches && weekData.logic_map) {
             const randomBranch = weekData.branches[Math.floor(Math.random() * weekData.branches.length)];
             currentScenario = weekData.logic_map[randomBranch];
         } else {
@@ -98,26 +106,53 @@
         document.getElementById('selection-screen').classList.add('hidden');
         document.getElementById('sim-screen').classList.remove('hidden');
         
-        // Show Scene Text
-        document.getElementById('scene-description').innerText = currentScenario.demographics?.scenario || "Scenario loading...";
+        // Cross-reference different JSON structures
+        const demo = currentScenario.demographics || {};
+        const sceneText = demo.scenario || currentScenario.scenario || "Scenario details not found.";
+        document.getElementById('scene-description').innerText = sceneText;
         
-        // Show Questions
+        // Vitals mapping
+        const v = currentScenario.vitals_baseline || demo.vitals || {};
+        document.getElementById('v-hr').innerText = v.hr || "--";
+        document.getElementById('v-bp').innerText = v.bp_systolic ? `${v.bp_systolic}/--` : (v.bp || "--/--");
+        document.getElementById('v-spo2').innerText = v.spO2 ? `${v.spO2}%` : "--%";
+        document.getElementById('v-gcs').innerText = v.gcs || "--";
+
+        // ECG Mapping
+        let ecgFile = currentScenario.ecg_image || demo.ecg_image;
+        if (Array.isArray(ecgFile)) ecgFile = ecgFile[0];
+
+        const imgElement = document.getElementById('ecg-display');
+        if (ecgFile && ecgFile !== "nil" && ecgFile !== "none") {
+            imgElement.src = `./images/${ecgFile}`;
+            imgElement.classList.remove('hidden');
+        } else {
+            imgElement.classList.add('hidden');
+        }
+
         questionStep = 0;
         updateQuestion();
     }
 
     function updateQuestion() {
+        document.getElementById('current-question-num').innerText = `Question ${questionStep + 1} of 8`;
         document.getElementById('current-question-text').innerText = questions[questionStep];
         document.getElementById('answer-input').value = "";
     }
 
     function nextQuestion() {
+        if (document.getElementById('answer-input').value.trim() === "") {
+            alert("Please provide a response before proceeding.");
+            return;
+        }
+
         questionStep++;
         if (questionStep < questions.length) {
             updateQuestion();
         } else {
-            alert("Scenario phase complete. Proceeding to Physiological Response...");
-            // Logic for Phase 2 (Consequences) goes here in next update!
+            alert("Clinical assessment complete. Reviewing intervention logic...");
+            // Final logic for grading can be added here
+            location.reload(); 
         }
     }
 </script>
