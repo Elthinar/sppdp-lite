@@ -1,4 +1,4 @@
-{
+{{
   "week_13_Stroke_Master_Randomizer": {
     "topic": "Neurology: Stroke & TIA",
     "week": 13,
@@ -9,12 +9,16 @@
           "scenario": "85-year-old with sudden onset right-sided hemiplegia and expressive aphasia.",
           "vitals": { "hr": 88, "bp": "190/110", "spO2": 94, "gcs": 12 },
           "ecg_image": "ecg_AF_with_RVR.jpg"
-        }
+        },
+        "logic_rules": [
+          { "action": "BGL Check", "type": "Assessment", "required": "> 4.0mmol" },
+          { "action": "FAST Score", "type": "Assessment" }
+        ]
       },
       "Adult_Stroke_Mimic": {
         "demographics": {
           "scenario": "A 40-year-old Type 1 Diabetic. Confused, slurred speech, combative.",
-          "vitals": { "hr": 115, "bp": "130/85", "spO2": 98, "gcs": 10 }
+          "vitals": { "hr": 118, "bp": "135/88", "spO2": 98, "gcs": 10 }
         }
       }
     }
@@ -27,14 +31,17 @@
       "Adult_Sepsis": {
         "demographics": {
           "scenario": "Elderly patient from nursing home. Indwelling catheter. Rigors and mottled skin.",
-          "vitals": { "hr": 125, "bp": "82/40", "spO2": 91, "gcs": 11 }
-        }
+          "vitals": { "hr": 128, "bp": "84/42", "spO2": 91, "gcs": 11 }
+        },
+        "logic_rules": [
+          { "action": "Fluid Bolus 250ml", "type": "Drug", "logic_check": "Chest Clear" }
+        ]
       },
       "Paediatric_Meningococcal": {
         "demographics": {
           "age": "2 years",
           "scenario": "Toddler, febrile and lethargic. Non-blanching purpuric rash noted on trunk.",
-          "vitals": { "hr": 175, "bp": "65/35", "spO2": 94, "gcs": 9 }
+          "vitals": { "hr": 178, "bp": "64/34", "spO2": 94, "gcs": 9 }
         }
       }
     }
