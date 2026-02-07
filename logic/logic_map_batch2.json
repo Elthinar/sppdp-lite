@@ -1,255 +1,57 @@
 {
-  "week_38_Overdose_Master_Randomizer": {
-    "topic": "Toxicology: Opioids & Benzodiazepines",
-    "week": 38,
-    "branches": ["Adult_Opioid_OD", "Paediatric_Accidental_Ingestion", "Adult_Benzo_OD"],
+  "week_06_Cardiac_Master_Randomizer": {
+    "topic": "Acute Coronary Syndrome & Arrhythmias",
+    "week": 6,
+    "branches": ["Adult_ACS", "Adult_Arrhythmia", "Paediatric_Arrhythmia", "Metabolic_Mimic"],
     "logic_map": {
-      "Adult_Opioid_OD": {
-        "cpg_reference": "DTP_NAL",
+      "Adult_ACS": {
         "demographics": {
-          "scenario": "Found unconscious in public toilet with syringe.",
-          "vitals": {"rr": 4, "gcs": 6, "pupils": "Pinpoint"},
-          "ages": [25, 35, 50]
-        },
-        "logic_rules": [
-          {
-            "action": "Naloxone 1.6mg IM",
-            "type": "Drug",
-            "logic_check": "Route == IM",
-            "physiological_response": {
-              "rr": 14,
-              "gcs": 15,
-              "behaviour": "Agitated/Aggressive",
-              "message": "Rapid reversal. Patient wakes up abrupt and combative (Withdrawal)."
-            }
-          },
-          
-        ]
+          "scenario": "A 66-year-old female complaining of epigastric burning and nausea. History of Type 2 Diabetes.",
+          "vitals": { "hr": 92, "bp": "145/90", "spO2": 95, "gcs": 15 },
+          "ecg_image": "stemi_inferior.jpg"
+        }
       },
-      "Paediatric_Accidental_Ingestion": {
-        "cpg_reference": "DTP_NAL / CPG_TO_POI",
+      "Adult_Arrhythmia": {
         "demographics": {
-          "ages": [2, 4],
-          "weights": [12, 16],
-          "scenario": "Toddler found playing with grandmother's pill box (Oxycontin).",
-          "presentation": "Drowsy, floppy, RR 8"
-        },
-        "logic_rules": [
-          {
-            "action": "Naloxone IM (10mcg/kg)",
-            "type": "Drug",
-            "logic_check": "Dose matches weight",
-            "physiological_response": {
-              "rr": 20,
-              "gcs": 14,
-              "message": "Paediatric dose administered. Child crying. Respiratory effort improved."
-            }
-          },
-          {
-            "action": "Transport Priority 1",
-            "type": "Decision",
-            "note": "Long acting opioids require observation",
-            "physiological_response": {
-              "message": "Rapid transport initiated due to risk of re-narcotisation."
-            }
-          }
-        ]
+          "scenario": "A 74-year-old male feeling 'fluttering' in chest and lightheaded.",
+          "vitals": { "hr": 165, "bp": "105/70", "spO2": 96, "gcs": 15 },
+          "ecg_image": "ecg_AF_with_RVR.jpg"
+        }
       },
-      "Adult_Benzo_OD": {
-        "cpg_reference": "CPG_TO_POI",
+      "Paediatric_Arrhythmia": {
         "demographics": {
-          "scenario": "Empty bottle of Diazepam found. Suicide note.",
-          "vitals": {"gcs": 9, "rr": 10, "bp": 100}
-        },
-        "logic_rules": [
-          {
-            "action": "Airway Positioning / OPA",
-            "type": "Skill",
-            "physiological_response": {
-              "spO2": 96,
-              "airway": "Patent",
-              "message": "Airway secured. Supportive care only."
-            }
-          },
-          {
-            "action": "Flumazenil",
-            "type": "Drug",
-            "logic_check": "Scope == ACP2",
-            "physiological_response": {
-              "message": "CONTRAINDICATION: Flumazenil is not indicated in mixed OD or chronic use (Seizure risk). Support airway."
-            }
-          }
-        ]
+          "age": "8 years",
+          "scenario": "8-year-old female, pale and lethargic. Mother states her heart is 'racing'.",
+          "vitals": { "hr": 220, "bp": "88/50", "spO2": 97, "gcs": 14 },
+          "ecg_image": "ecg_SVT.jpg"
+        }
+      },
+      "Metabolic_Mimic": {
+        "demographics": {
+          "scenario": "A 55-year-old ESRF patient. Missed dialysis x2 sessions. Extremely weak.",
+          "vitals": { "hr": 42, "bp": "95/60", "spO2": 94, "gcs": 13 },
+          "ecg_image": "ecg_hyperK.jpg"
+        }
       }
     }
   },
-
-  "week_39_Envenomation_Master_Randomizer": {
-    "topic": "Envenomation: Snake, Marine & Spider",
-    "week": 39,
-    "branches": ["Snake_Bite", "Box_Jellyfish", "Redback_Spider"],
+  "week_09_Respiratory_Master_Randomizer": {
+    "topic": "Asthma & COPD",
+    "week": 9,
+    "branches": ["Adult_COPD", "Paediatric_Asthma"],
     "logic_map": {
-      "Snake_Bite": {
-        "cpg_reference": "CPG_TO_SNA",
+      "Adult_COPD": {
         "demographics": {
-          "scenarios": [
-            {"type": "Brown Snake", "location": "Backyard", "symptoms": "Collapse, now GCS 15"},
-            {"type": "Tiger Snake", "location": "Bushwalking", "symptoms": "Bleeding gums"}
-          ]
-        },
-        "logic_rules": [
-          {
-            "action": "Pressure Bandage Immobilisation (PBI)",
-            "type": "Skill",
-            "physiological_response": {
-              "venom_spread": "Slowed",
-              "message": "PBI applied to full limb. Splint applied."
-            }
-          },
-          {
-            "action": "Mobilise Patient",
-            "type": "Action",
-            "physiological_response": {
-              "gcs": 3,
-              "bp": 50,
-              "message": "CRITICAL FAIL: Muscle pump activation caused rapid venom distribution. Patient arrest."
-            }
-          }
-        ]
+          "scenario": "A 78-year-old male with increased dyspnoea. Home O2 user.",
+          "vitals": { "hr": 110, "bp": "150/95", "spO2": 84, "gcs": 14 }
+        }
       },
-      "Box_Jellyfish": {
-        "cpg_reference": "CPG_TO_MAR",
+      "Paediatric_Asthma": {
         "demographics": {
-          "location": "North Queensland Beach",
-          "symptoms": "Excruciating pain, ladder-like welts, respiratory distress"
-        },
-        "logic_rules": [
-          {
-            "action": "Vinegar Application",
-            "type": "Skill",
-            "note": "Inhibits nematocyst discharge",
-            "physiological_response": {
-              "pain": "Unchanged (prevents worsening)",
-              "message": "Vinegar applied liberally for 30 seconds. Tentacles removed."
-            }
-          },
-          {
-            "action": "Fresh Water / Rubbing Sand",
-            "type": "Action",
-            "physiological_response": {
-              "pain_score": 10,
-              "message": "CRITICAL FAIL: Fresh water caused massive nematocyst discharge. Pain severe."
-            }
-          }
-        ]
-      }
-    }
-  },
-
-  "week_41_TCA_Master_Randomizer": {
-    "topic": "Toxicology: Tricyclic Antidepressants",
-    "week": 41,
-    "branches": ["Adult_Amitriptyline_OD"],
-    "logic_map": {
-      "Adult_Amitriptyline_OD": {
-        "cpg_reference": "CPG_TO_TRI",
-        "demographics": {
-          "history": "Depression, bottle of Endep missing",
-          "vitals": {"hr": 130, "bp": 90, "gcs": 12}
-        },
-        "logic_rules": [
-          {
-            "action": "Sodium Bicarbonate",
-            "type": "Drug",
-            "logic_check": "Scope == CCP",
-            "physiological_response": {
-              "message": "ALERT: Not in ACP2 scope. Request CCP intercept immediately."
-            }
-          },
-          {
-            "action": "Hyperventilation",
-            "type": "Skill",
-            "note": "Transient measure if intubated/ventilated",
-            "physiological_response": {
-              "ph": "Increased",
-              "message": "Inducing respiratory alkalosis to bind drug. Bridge to CCP."
-            }
-          },
-          {
-             "action": "Transport Decision",
-             "type": "Decision",
-             "physiological_response": {
-                 "message": "Rapid transport with R1/CCP notification due to high risk of cardiac arrest."
-             }
-          }
-        ]
-      }
-    }
-  },
-
-  "week_45_Paed_Misc_Master_Randomizer": {
-    "topic": "Paediatric: Button Battery & ENT",
-    "week": 45,
-    "branches": ["Button_Battery", "Post_Tonsillectomy_Bleed"],
-    "logic_map": {
-      "Button_Battery": {
-        "cpg_reference": "CPG_TO_POI",
-        "demographics": {
-          "age": "2 years",
-          "weight": "12kg",
-          "scenario": "Witnessed ingestion of lithium coin battery 30 mins ago"
-        },
-        "logic_rules": [
-          {
-            "action": "Administer Honey",
-            "type": "Drug",
-            "logic_check": "Ingestion < 12 hours AND Age > 1 year",
-            "physiological_response": {
-              "message": "10mL Honey administered. Coats battery to reduce tissue necrosis."
-            }
-          },
-          {
-            "action": "Transport Priority 1",
-            "type": "Decision",
-            "physiological_response": {
-              "message": "Rapid transport to hospital with endoscopy capability. Time critical."
-            }
-          }
-        ]
-      },
-      "Post_Tonsillectomy_Bleed": {
-        "cpg_reference": "CPG_PA_ENT",
-        "demographics": {
-          "age": "6 years",
-          "scenario": "Day 7 post-op. Vomiting large amounts of bright red blood.",
-          "vitals": {"hr": 150, "bp": 80, "skin": "Pale/Cool"}
-        },
-        "logic_rules": [
-          {
-            "action": "IV Fluid Resuscitation",
-            "type": "Drug",
-            "note": "20ml/kg",
-            "physiological_response": {
-              "bp": +10,
-              "message": "Fluid bolus given. Perfusion supported."
-            }
-          },
-          {
-            "action": "Airway Management",
-            "type": "Skill",
-            "logic_check": "Suction available",
-            "physiological_response": {
-              "message": "Patient positioned side/forward. Suction ready. High risk of aspiration."
-            }
-          },
-          {
-            "action": "Inspect Throat",
-            "type": "Assessment",
-            "physiological_response": {
-              "message": "WARNING: Do not disturb clot. Visual inspection only."
-            }
-          }
-        ]
+          "age": "4 years",
+          "scenario": "4-year-old with severe work of breathing. Silent chest on auscultation.",
+          "vitals": { "hr": 165, "bp": "90/60", "spO2": 88, "gcs": 12 }
+        }
       }
     }
   }
