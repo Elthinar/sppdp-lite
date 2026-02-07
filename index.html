@@ -12,21 +12,23 @@
         .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background: #004a99; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         .btn:hover { background: #003366; }
         .btn-secondary { background: #6c757d; }
-        .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #1a1a1a; color: #00ff00; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; margin: 15px 0; }
+        .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #1a1a1a; color: #00ff00; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; margin: 15px 0; border: 2px solid #333; }
         .ecg-box { width: 100%; margin: 15px 0; border: 3px solid #333; border-radius: 4px; display: block; }
         .q-box { margin-top: 20px; padding: 15px; border-left: 5px solid #004a99; background: #f8f9fa; border-radius: 0 8px 8px 0; }
-        .scene-text { line-height: 1.6; font-size: 1.1em; background: #e9ecef; padding: 15px; border-radius: 8px; }
-        textarea { width: 100%; height: 100px; margin-top: 10px; border-radius: 8px; border: 1px solid #ced4da; padding: 10px; box-sizing: border-box; font-size: 16px; }
-        .status-bar { text-align: center; font-size: 0.9em; color: #666; margin-bottom: 20px; }
+        .scene-text { line-height: 1.6; font-size: 1.1em; background: #e9ecef; padding: 15px; border-radius: 8px; font-weight: 500; }
+        textarea { width: 100%; height: 100px; margin-top: 10px; border-radius: 8px; border: 1px solid #ced4da; padding: 10px; box-sizing: border-box; font-size: 16px; font-family: inherit; }
+        .status-bar { text-align: center; font-size: 0.9em; color: #666; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .summary-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .summary-q { font-weight: bold; color: #004a99; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container" id="app">
-    <h1>SPPDP Lite</h1>
+    <h1 id="main-title">SPPDP Lite</h1>
     
     <div id="selection-screen">
-        <div class="status-bar">Select your training phase:</div>
+        <div class="status-bar">Select training phase</div>
         <button class="btn" onclick="loadBatch(1)">Phase 1: Resuscitation (Wk 1-2)</button>
         <button class="btn" onclick="loadBatch(2)">Phase 2: Medical (Wk 6-12)</button>
         <button class="btn" onclick="loadBatch(3)">Phase 3: Trauma/Neuro (Wk 13-23)</button>
@@ -34,7 +36,7 @@
     </div>
 
     <div id="sim-screen" class="hidden">
-        <div class="status-bar" id="phase-indicator">Clinical Simulation in Progress</div>
+        <div class="status-bar" id="phase-indicator">Clinical Simulation</div>
         <div id="scene-description" class="scene-text"></div>
         
         <div class="vitals-grid" id="vitals">
@@ -48,11 +50,16 @@
 
         <div id="question-area" class="q-box">
             <strong id="current-question-num">Question 1 of 8</strong>
-            <p id="current-question-text" style="margin-top: 5px;"></p>
+            <p id="current-question-text" style="margin-top: 5px; min-height: 3em;"></p>
             <textarea id="answer-input" placeholder="Enter clinical rationale..."></textarea>
             <button class="btn" onclick="nextQuestion()">Submit Response</button>
-            <button class="btn btn-secondary" onclick="location.reload()">Reset Scenario</button>
         </div>
+    </div>
+
+    <div id="summary-screen" class="hidden">
+        <h2 style="color: #004a99; text-align: center;">Scenario Summary</h2>
+        <div id="summary-content" style="margin-bottom: 20px;"></div>
+        <button class="btn" onclick="location.reload()">Start New Scenario</button>
     </div>
 </div>
 
@@ -60,6 +67,7 @@
     let currentBatchData = null;
     let currentScenario = null;
     let questionStep = 0;
+    let userAnswers = [];
 
     const questions = [
         "Identify scene hazards and how you would address them.",
@@ -74,15 +82,13 @@
 
     async function loadBatch(batchNum) {
         try {
-            // Using ./ to ensure correct relative path on GitHub Pages
             const response = await fetch(`./logic/logic_map_batch${batchNum}.json`);
             if (!response.ok) throw new Error("Network response was not ok");
-            
             currentBatchData = await response.json();
             startRandomScenario();
         } catch (e) {
             console.error("Fetch error:", e);
-            alert("Error loading logic. Ensure folders are named 'logic' and 'images' (lowercase) on GitHub.");
+            alert("Error loading logic. Ensure folders 'logic' and 'images' are lowercase.");
         }
     }
 
@@ -91,14 +97,12 @@
         const randomKey = keys[Math.floor(Math.random() * keys.length)];
         const weekData = currentBatchData[randomKey];
         
-        // Check if it's a Master Randomizer with branches
         if (weekData.branches && weekData.logic_map) {
             const randomBranch = weekData.branches[Math.floor(Math.random() * weekData.branches.length)];
             currentScenario = weekData.logic_map[randomBranch];
         } else {
             currentScenario = weekData;
         }
-
         displayScenario();
     }
 
@@ -106,17 +110,16 @@
         document.getElementById('selection-screen').classList.add('hidden');
         document.getElementById('sim-screen').classList.remove('hidden');
         
-        // Cross-reference different JSON structures
         const demo = currentScenario.demographics || {};
         const sceneText = demo.scenario || currentScenario.scenario || "Scenario details not found.";
         document.getElementById('scene-description').innerText = sceneText;
         
-        // Vitals mapping
-        const v = currentScenario.vitals_baseline || demo.vitals || {};
-        document.getElementById('v-hr').innerText = v.hr || "--";
-        document.getElementById('v-bp').innerText = v.bp_systolic ? `${v.bp_systolic}/--` : (v.bp || "--/--");
-        document.getElementById('v-spo2').innerText = v.spO2 ? `${v.spO2}%` : "--%";
-        document.getElementById('v-gcs').innerText = v.gcs || "--";
+        // Vitals mapping with fallbacks
+        const v = currentScenario.vitals_baseline || demo.vitals || currentScenario.vitals || {};
+        document.getElementById('v-hr').innerText = v.hr || "Normal";
+        document.getElementById('v-bp').innerText = v.bp_systolic ? `${v.bp_systolic}/--` : (v.bp || "Normal");
+        document.getElementById('v-spo2').innerText = v.spO2 ? `${v.spO2}%` : (v.spo2 ? `${v.spo2}%` : "98%");
+        document.getElementById('v-gcs').innerText = v.gcs || "15";
 
         // ECG Mapping
         let ecgFile = currentScenario.ecg_image || demo.ecg_image;
@@ -131,6 +134,7 @@
         }
 
         questionStep = 0;
+        userAnswers = [];
         updateQuestion();
     }
 
@@ -138,22 +142,42 @@
         document.getElementById('current-question-num').innerText = `Question ${questionStep + 1} of 8`;
         document.getElementById('current-question-text').innerText = questions[questionStep];
         document.getElementById('answer-input').value = "";
+        window.scrollTo(0,0);
     }
 
     function nextQuestion() {
-        if (document.getElementById('answer-input').value.trim() === "") {
+        const val = document.getElementById('answer-input').value.trim();
+        if (val === "") {
             alert("Please provide a response before proceeding.");
             return;
         }
+
+        userAnswers.push({ q: questions[questionStep], a: val });
 
         questionStep++;
         if (questionStep < questions.length) {
             updateQuestion();
         } else {
-            alert("Clinical assessment complete. Reviewing intervention logic...");
-            // Final logic for grading can be added here
-            location.reload(); 
+            showSummary();
         }
+    }
+
+    function showSummary() {
+        document.getElementById('sim-screen').classList.add('hidden');
+        document.getElementById('summary-screen').classList.remove('hidden');
+        document.getElementById('main-title').innerText = "Report Card";
+
+        let html = `<div style="background: #fdf2f2; border: 1px solid #ecc; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>Scenario:</strong> ${document.getElementById('scene-description').innerText}</div>`;
+        
+        userAnswers.forEach((item, index) => {
+            html += `<div class="summary-item">
+                        <span class="summary-q">Q${index + 1}: ${item.q}</span>
+                        <div style="white-space: pre-wrap;">${item.a}</div>
+                     </div>`;
+        });
+
+        document.getElementById('summary-content').innerHTML = html;
     }
 </script>
 
