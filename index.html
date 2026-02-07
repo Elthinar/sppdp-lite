@@ -20,14 +20,12 @@
         .status-bar { text-align: center; font-size: 0.9em; color: #666; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
         .summary-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
         .summary-q { font-weight: bold; color: #004a99; display: block; margin-bottom: 5px; }
-        #debug-log { font-size: 10px; color: #ccc; margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container" id="app">
     <h1 id="main-title">SPPDP Lite</h1>
-    
     <div id="selection-screen">
         <div class="status-bar">Select training phase</div>
         <button class="btn" onclick="loadBatch(1)">Phase 1: Resuscitation (Wk 1-2)</button>
@@ -39,16 +37,13 @@
     <div id="sim-screen" class="hidden">
         <div class="status-bar" id="phase-indicator">Clinical Simulation</div>
         <div id="scene-description" class="scene-text"></div>
-        
         <div class="vitals-grid">
             <div>HR: <span id="v-hr">--</span></div>
             <div>BP: <span id="v-bp">--/--</span></div>
             <div>SpO2: <span id="v-spo2">--%</span></div>
             <div>GCS: <span id="v-gcs">--</span></div>
         </div>
-
         <img id="ecg-display" class="ecg-box hidden" src="" alt="ECG Strip">
-
         <div id="question-area" class="q-box">
             <strong id="current-question-num">Question 1 of 8</strong>
             <p id="current-question-text" style="margin-top: 5px; min-height: 3em;"></p>
@@ -63,8 +58,6 @@
         <div id="summary-content" style="margin-bottom: 20px;"></div>
         <button class="btn" onclick="location.reload()">Start New Scenario</button>
     </div>
-
-    <div id="debug-log"></div>
 </div>
 
 <script>
@@ -84,8 +77,6 @@
         "What is your disposition plan (Transport/Consult/ROSC)??"
     ];
 
-    function log(msg) { document.getElementById('debug-log').innerText += msg + "\n"; }
-
     async function loadBatch(batchNum) {
         try {
             const response = await fetch(`./logic/logic_map_batch${batchNum}.json`);
@@ -93,7 +84,7 @@
             currentBatchData = await response.json();
             startRandomScenario();
         } catch (e) {
-            alert("Error: Check folder/file names on GitHub.");
+            alert("Error loading logic. Verify file names.");
         }
     }
 
@@ -101,7 +92,6 @@
         const keys = Object.keys(currentBatchData);
         const randomKey = keys[Math.floor(Math.random() * keys.length)];
         const weekData = currentBatchData[randomKey];
-        
         if (weekData.branches && weekData.logic_map) {
             const randomBranch = weekData.branches[Math.floor(Math.random() * weekData.branches.length)];
             currentScenario = weekData.logic_map[randomBranch];
@@ -115,30 +105,33 @@
         document.getElementById('selection-screen').classList.add('hidden');
         document.getElementById('sim-screen').classList.remove('hidden');
         
-        // Deep search for properties
         const findInObj = (obj, key) => {
-            if (obj[key]) return obj[key];
+            if (obj[key] !== undefined && obj[key] !== null) return obj[key];
             for (let prop in obj) {
                 if (typeof obj[prop] === 'object' && obj[prop] !== null) {
                     let result = findInObj(obj[prop], key);
-                    if (result) return result;
+                    if (result !== null) return result;
                 }
             }
             return null;
         };
 
-        const sceneText = findInObj(currentScenario, 'scenario') || findInObj(currentScenario, 'description') || "No description found.";
+        const sceneText = findInObj(currentScenario, 'scenario') || findInObj(currentScenario, 'description') || "No description.";
         document.getElementById('scene-description').innerText = sceneText;
         
-        // Vitals mapping with deep search and defaults
         const vitals = findInObj(currentScenario, 'vitals_baseline') || findInObj(currentScenario, 'vitals') || {};
-        
-        document.getElementById('v-hr').innerText = vitals.hr || "Normal";
-        document.getElementById('v-bp').innerText = vitals.bp_systolic ? `${vitals.bp_systolic}/--` : (vitals.bp || "Normal");
-        document.getElementById('v-spo2').innerText = vitals.spO2 || vitals.spo2 || "98%";
+        const age = String(findInObj(currentScenario, 'age') || "");
+        const isPaed = (age.includes("year") || age.includes("week") || age.includes("month") || age.includes("child") || age.includes("Newborn"));
+
+        // Clinical Data Logic: Randomized Variance for "Stable" patients
+        // This ensures the learner ALWAYS sees a number they have to interpret.
+        const getRandom = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+
+        document.getElementById('v-hr').innerText = vitals.hr || (isPaed ? getRandom(130, 150) : getRandom(68, 82));
+        document.getElementById('v-bp').innerText = vitals.bp_systolic ? `${vitals.bp_systolic}/--` : (vitals.bp || (isPaed ? "74/48" : getRandom(118, 135) + "/" + getRandom(75, 85)));
+        document.getElementById('v-spo2').innerText = (vitals.spO2 || vitals.spo2 || getRandom(97, 99)) + "%";
         document.getElementById('v-gcs').innerText = vitals.gcs || "15";
 
-        // ECG Search
         let ecgFile = findInObj(currentScenario, 'ecg_image');
         if (Array.isArray(ecgFile)) ecgFile = ecgFile[0];
 
@@ -157,6 +150,7 @@
         document.getElementById('current-question-num').innerText = `Question ${questionStep + 1} of 8`;
         document.getElementById('current-question-text').innerText = questions[questionStep];
         document.getElementById('answer-input').value = "";
+        window.scrollTo(0,0);
     }
 
     function nextQuestion() {
