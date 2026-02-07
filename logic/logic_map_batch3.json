@@ -5,283 +5,37 @@
     "branches": ["Adult_Stroke", "Adult_Stroke_Mimic"],
     "logic_map": {
       "Adult_Stroke": {
-        "cpg_reference": "CPG_NE_STR",
         "demographics": {
-          "names": ["Arthur", "Betty", "George", "Maria"],
-          "ages": [65, 72, 79, 85],
-          "scenarios": [
-            {
-              "type": "Ischaemic", 
-              "symptoms": "Right hemiplegia, aphasia", 
-              "onset": "1 hour ago (Within window)",
-              "history": "Atrial Fibrillation",
-              "ecg_image": "ecg_AF_with_RVR.jpg"
-            },
-            {
-              "type": "TIA", 
-              "symptoms": "Left arm weakness, resolved on arrival", 
-              "onset": "2 hours ago",
-              "history": "Hypertension",
-              "ecg_image": "nil"
-            }
-          ]
-        },
-        "logic_rules": [
-          {
-            "action": "Assess FAST Score",
-            "type": "Assessment",
-            "physiological_response": {
-              "message": "Face: Droop. Arms: Drift. Speech: Slurred/Absent. FAST Positive."
-            }
-          },
-          {
-            "action": "Assess BGL",
-            "type": "Assessment",
-            "required_finding": "BGL > 4.0mmol/L",
-            "physiological_response": {
-              "message": "BGL 5.8mmol/L. Hypoglycaemia excluded."
-            }
-          },
-          {
-            "action": "Transport Decision",
-            "type": "Decision",
-            "logic_check": "Onset Time < 4.5 Hours",
-            "physiological_response": {
-              "message": "Pre-notification sent. Thrombolysis candidate identified (Within window)."
-            },
-            "alt_response_if_check_fails": {
-              "message": "Transport to hospital. Outside thrombolysis window (>4.5 hrs) or symptoms resolved (TIA pathway)."
-            }
-          }
-        ]
+          "scenario": "85-year-old with sudden onset right-sided hemiplegia and expressive aphasia.",
+          "vitals": { "hr": 88, "bp": "190/110", "spO2": 94, "gcs": 12 },
+          "ecg_image": "ecg_AF_with_RVR.jpg"
+        }
       },
       "Adult_Stroke_Mimic": {
-        "cpg_reference": "CPG_NE_STR / CPG_ME_HYPO",
         "demographics": {
-          "scenario": "Confused, slurred speech, combative",
-          "history": "Type 1 Diabetes"
-        },
-        "logic_rules": [
-          {
-            "action": "Assess BGL",
-            "type": "Assessment",
-            "required_finding": "BGL < 4.0mmol/L",
-            "physiological_response": {
-              "message": "BGL 2.1mmol/L. CRITICAL FINDING: Hypoglycaemia mimicking stroke."
-            }
-          },
-          {
-            "action": "Administer Glucagon IM",
-            "type": "Drug",
-            "logic_check": "No IV Access available",
-            "physiological_response": {
-              "gcs": "Improving",
-              "message": "Glucagon administered. GCS improving after 10 mins."
-            }
-          }
-        ]
+          "scenario": "A 40-year-old Type 1 Diabetic. Confused, slurred speech, combative.",
+          "vitals": { "hr": 115, "bp": "130/85", "spO2": 98, "gcs": 10 }
+        }
       }
     }
   },
-
-  "week_14_Seizures_Master_Randomizer": {
-    "topic": "Neurology: Seizures",
-    "week": 14,
-    "branches": ["Adult_Status_Epilepticus", "Paediatric_Febrile_Convulsion"],
-    "logic_map": {
-      "Adult_Status_Epilepticus": {
-        "cpg_reference": "CPG_NE_SEI",
-        "demographics": {
-          "ages": [25, 40, 55],
-          "weights": [70, 85, 100],
-          "scenario": "Generalised tonic-clonic seizure > 5 mins"
-        },
-        "logic_rules": [
-          {
-            "action": "Midazolam 5mg IM",
-            "type": "Drug",
-            "note": "Standard Adult Dose (Repeatable every 10 mins, Max 20mg)",
-            "physiological_response": {
-              "seizure": "Ceased",
-              "airway": "Snoring (requiring positional management)",
-              "message": "Seizure terminated. Patient post-ictal. Airway support required."
-            }
-          },          
-          {
-                  },
-      "Paediatric_Febrile_Convulsion": {
-        "cpg_reference": "CPG_NE_SEI_PAED",
-        "demographics": {
-          "ages": [1, 2, 4],
-          "weights_calc": "(Age + 4) * 2",
-          "scenario": "Hot to touch, generalized shaking, eyes rolled back"
-        },
-        "logic_rules": [
-          {
-            "action": "Midazolam IM (Weight Based)",
-            "type": "Drug",
-            "note": "200mcg/kg (Max 5mg)",
-            "logic_check": "Dose matches weight calculation",
-            "physiological_response": {
-              "seizure": "Ceased",
-              "message": "Correct dose administered. Seizure activity stopped."
-            }
-          },
-          {
-            "action": "Check Temperature",
-            "type": "Assessment",
-            "physiological_response": {
-              "temp": 39.5,
-              "message": "High fever confirmed. Suspect febrile convulsion."
-            }
-          },
-          {
-            "action": "Remove Excess Clothing",
-            "type": "Skill",
-            "physiological_response": {
-              "message": "Passive cooling initiated. Do NOT actively cool (shivering risk)."
-            }
-          }
-        ]
-      }
-    }
-  },
-
   "week_16_Sepsis_Master_Randomizer": {
-    "topic": "Infection: Sepsis & Meningococcal",
+    "topic": "Sepsis & Infection",
     "week": 16,
     "branches": ["Adult_Sepsis", "Paediatric_Meningococcal"],
     "logic_map": {
       "Adult_Sepsis": {
-        "cpg_reference": "CPG_ME_SEP",
         "demographics": {
-          "ages": [50, 68, 82],
-          "history": ["UTI", "Chemo Patient", "Pneumonia"],
-          "vitals": {"bp": 85, "hr": 120, "temp": 38.8, "etco2": 25}
-        },
-        "logic_rules": [
-          {
-            "action": "Fluid Bolus (Sodium Chloride)",
-            "type": "Drug",
-            "logic_check": "Chest Clear (No Crackles)",
-            "physiological_response": {
-              "bp_systolic": +10,
-              "hr": -5,
-              "message": "250ml Bolus administered. Perfusion improving."
-            },
-            "alt_response_if_check_fails": {
-              "message": "WARNING: Patient has pulmonary oedema (Crackles). Fluid may worsen respiratory status."
-            }
-          },
-          {
-            "action": "Adrenaline Infusion (Consult)",
-            "type": "Drug",
-            "note": "Consult required for ACPII in some jurisdictions for sepsis pressors",
-            "physiological_response": {
-              "message": "Consult line: 'Continue fluid resuscitation up to 20ml/kg. Transport priority 1.'"
-            }
-          }
-        ]
+          "scenario": "Elderly patient from nursing home. Indwelling catheter. Rigors and mottled skin.",
+          "vitals": { "hr": 125, "bp": "82/40", "spO2": 91, "gcs": 11 }
+        }
       },
       "Paediatric_Meningococcal": {
-        "cpg_reference": "CPG_ME_MENING",
         "demographics": {
-          "ages": [2, 5, 8],
-          "scenario": "Lethargic, non-blanching purpuric rash on legs",
-          "vitals": {"hr": 160, "bp": 70, "cap_refill": 4}
-        },
-        "logic_rules": [
-          {
-            "action": "Ceftriaxone IV/IM",
-            "type": "Drug",
-            "indication": "Suspected Meningococcal Septicaemia",
-            "note": "50mg/kg (Max 2g)",
-            "logic_check": "Allergy Status != Anaphylaxis to Penicillin",
-            "physiological_response": {
-              "message": "Antibiotic administered. Critical intervention for meningococcal."
-            }
-          },
-          {
-            "action": "Fluid Bolus 20ml/kg",
-            "type": "Drug",
-            "physiological_response": {
-              "bp": +10,
-              "cap_refill": 3,
-              "message": "Fluid loading. Shock index improving."
-            }
-          }
-        ]
-      }
-    }
-  },
-
-  "week_23_Fractures_Master_Randomizer": {
-    "topic": "Trauma: Fractures",
-    "week": 23,
-    "branches": ["Adult_Femur_Fracture", "Paediatric_Forearm_Fracture"],
-    "logic_map": {
-      "Adult_Femur_Fracture": {
-        "cpg_reference": "CPG_TR_LI",
-        "demographics": {
-          "scenario": "MBA motorcyclist. Mid-shaft femur deformity.",
-          "pain_score": 10,
-          "vitals": {"bp": 110, "hr": 115}
-        },
-        "logic_rules": [
-          {
-            "action": "Apply Traction Splint (CT-6)",
-            "type": "Skill",
-            "logic_check": "Pelvis Stable AND Ankle Intact",
-            "physiological_response": {
-              "pain_score": -3,
-              "thigh_muscle_spasm": "Reduced",
-              "message": "Traction applied. Leg length restored. Muscle spasm reduced."
-            }
-          },
-          {
-            "action": "Morphine / Fentanyl IV",
-            "type": "Drug",
-            "physiological_response": {
-              "pain_score": -5,
-              "message": "IV Access secured. Opioid analgesia effective."
-            }
-          }
-        ]
-      },
-      "Paediatric_Forearm_Fracture": {
-        "cpg_reference": "CPG_TR_LI / CPG_PAIN_PAED",
-        "demographics": {
-          "ages": [6, 9],
-          "scenario": "Fall from trampoline. 'Dinner fork' deformity to wrist.",
-          "pain_score": 8
-        },
-        "logic_rules": [
-          {
-            "action": "Intranasal Fentanyl",
-            "type": "Drug",
-            "logic_check": "Nasal cavity clear",
-            "physiological_response": {
-              "pain_score": -3,
-              "message": "IN Fentanyl administered. Child calmer. Allows for splinting."
-            }
-          },
-          {
-            "action": "Splinting",
-            "type": "Skill",
-            "physiological_response": {
-              "pain_score": -2,
-              "message": "Limb immobilized. Transport comfortable."
-            }
-          },
-          {
-            "action": "Methoxyflurane",
-            "type": "Drug",
-            "logic_check": "Patient can follow commands",
-            "physiological_response": {
-              "message": "Inhaler utilized. Good adjunct to Fentanyl."
-            }
-          }
-        ]
+          "age": "2 years",
+          "scenario": "Toddler, febrile and lethargic. Non-blanching purpuric rash noted on trunk.",
+          "vitals": { "hr": 175, "bp": "65/35", "spO2": 94, "gcs": 9 }
+        }
       }
     }
   }
