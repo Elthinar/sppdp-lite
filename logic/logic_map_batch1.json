@@ -1,0 +1,245 @@
+{
+  "week_01_Resus_Master_Randomizer": {
+    "topic": "Resuscitation: Medical (Adult, Paediatric, Newborn)",
+    "week": 1,
+    "branches": ["Adult_Medical_Arrest", "Paediatric_Medical_Arrest", "Newborn_Resus"],
+    "logic_map": {
+      "Adult_Medical_Arrest": {
+        "cpg_reference": "CPG_RES_ADULT",
+        "demographics": {
+          "names": ["John", "Michael", "David", "Susan", "Linda", "Karen"],
+          "ages": [45, 55, 62, 74, 83],
+          "weights": [70, 85, 95, 110]
+        },
+        "scenario_randomizer": [
+            {
+                "description": "Collapse at shopping centre. Bystander CPR in progress.",
+                "initial_rhythm": "VF",
+                "ecg_image": "vf_coarse.jpg"
+            },
+            {
+                "description": "Found unresponsive in bed by family. Last seen 1 hour ago.",
+                "initial_rhythm": "Asystole",
+                "ecg_image": "asystole.jpg"
+            }
+        ],
+        "logic_rules": [
+          {
+            "action": "Defibrillation (Manual Mode)",
+            "type": "Skill",
+            "logic_check": "Rhythm == VF OR VT",
+            "physiological_response": {
+              "message": "Shock delivered at 200J. CPR recommenced. Rhythm check in 2 mins."
+            },
+            "alt_response_if_check_fails": {
+              "message": "CRITICAL FAIL: Shock delivered to Non-Shockable rhythm. Patient injury risk."
+            }
+          },
+          {
+            "action": "Adrenaline 1mg IV",
+            "type": "Drug",
+            "logic_check": "Time since last dose > 3 mins",
+            "physiological_response": {
+              "message": "Adrenaline 1mg administered. Circulatory support provided."
+            }
+          },
+          {
+            "action": "LMA (i-gel) Insertion",
+            "type": "Skill",
+            "physiological_response": {
+              "etCO2": "Waveform Present (20-30mmHg)",
+              "message": "Airway secured. Continuous ventilations established."
+            }
+          }
+        ]
+      },
+
+      "Paediatric_Medical_Arrest": {
+        "cpg_reference": "CPG_RES_PAED",
+        "demographics": {
+          "names": ["Oliver", "Noah", "Leo", "Mia", "Isla", "Charlotte"],
+          "ages": [1, 4, 7, 10], 
+          "weights_calc": "Age based (e.g. (Age+4)*2)",
+          "scenarios": [
+              {"cause": "Drowning", "rhythm": "Asystole", "history": "Found in pool"},
+              {"cause": "Respiratory Arrest", "rhythm": "PEA", "history": "Severe asthma history"}
+          ]
+        },
+        "logic_rules": [
+          {
+            "action": "Calculate Weight & Adrenaline Dose",
+            "type": "Calculation",
+            "input_required": "Weight",
+            "physiological_response": {
+              "message": "Weight calculated. Target Adrenaline Dose: 10mcg/kg."
+            }
+          },
+          {
+            "action": "Adrenaline IV/IO",
+            "type": "Drug",
+            "logic_check": "Dose == (Weight * 10mcg)",
+            "physiological_response": {
+              "message": "Correct dose administered for weight."
+            },
+            "alt_response_if_check_fails": {
+              "message": "Dosing Error: Dose does not match 10mcg/kg for this patient weight."
+            }
+          },
+          {
+            "action": "Fluid Bolus 20ml/kg",
+            "type": "Drug",
+            "logic_check": "Dose == (Weight * 20ml)",
+            "physiological_response": {
+              "message": "Fluid bolus delivered. Checking for ROSC."
+            }
+          }
+        ]
+      },
+
+      "Newborn_Resus": {
+        "cpg_reference": "CPG_RES_NEO",
+        "demographics": {
+          "names": ["Baby Boy", "Baby Girl"],
+          "ages": ["0 days"],
+          "weights": [2.5, 3.0, 3.5, 4.0],
+          "scenarios": [
+              {"cause": "Meconium staining", "presentation": "Flat, floppy, blue"},
+              {"cause": "Unexpected breech", "presentation": "Apnoeic, HR 50"}
+          ],
+          "ecg_image": ["ecg_SinusBrady.jpg"]
+        },
+        "logic_rules": [
+          {
+            "action": "Dry and Stimulate",
+            "type": "Skill",
+            "physiological_response": {
+              "hr": "Unchanged",
+              "message": "Baby dried. Wet towels removed. Remains apnoeic."
+            }
+          },
+          {
+            "action": "Positive Pressure Ventilation (Room Air)",
+            "type": "Skill",
+            "logic_check": "HR < 100 AND Apnoeic",
+            "physiological_response": {
+              "hr": "Rising > 100",
+              "colour": "Pinkening",
+              "message": "Effective ventilation. HR responding rapidly."
+            }
+          },
+          {
+            "action": "Add Oxygen",
+            "type": "Skill",
+            "logic_check": "Time > 10 mins AND SpO2 < Target",
+            "physiological_response": {
+               "message": "Oxygen titrated. NB: Pre-ductal SpO2 targets (e.g., 60-70% at 3 mins) apply."
+            },
+            "alt_response_if_check_fails": {
+               "message": "Warning: Newborns start in Room Air. Oxygen only indicated if HR fails to rise or SpO2 below target curves."
+            }
+          }
+        ]
+      }
+    }
+  },
+
+  "week_02_Trauma_Resus_Master_Randomizer": {
+    "topic": "Resuscitation: Traumatic (Adult, Paediatric, Newborn)",
+    "week": 2,
+    "branches": ["Adult_Trauma_Arrest", "Paediatric_Trauma_Arrest", "Newborn_Trauma"],
+    "logic_map": {
+      "Adult_Trauma_Arrest": {
+        "cpg_reference": "CPG_RES_TRAUMA",
+        "demographics": {
+          "scenarios": [
+              {"mechanism": "High Speed MBA", "injury": "Chest Trauma (Tension)", "rhythm": "PEA"},
+              {"mechanism": "Fall from 10m", "injury": "Pelvic/Femur #", "rhythm": "PEA"}
+          ]
+        },
+        "logic_rules": [
+          {
+            "action": "Needle Decompression (ARS)",
+            "type": "Skill",
+            "logic_check": "Signs of Tension Pneumothorax Present",
+            "physiological_response": {
+              "sounds": "Hiss of air",
+              "message": "Decompression successful. Tension relieved."
+            }
+          },
+          {
+            "action": "Pelvic Binder",
+            "type": "Skill",
+            "logic_check": "Mechanism suggestive of pelvic trauma",
+            "physiological_response": {
+              "message": "Binder applied at trochanters."
+            }
+          },
+          {
+            "action": "Volume Replacement (Saline)",
+            "type": "Drug",
+            "note": "Permissive Hypotension principles apply if ROSC achieved",
+            "physiological_response": {
+              "message": "Fluid administered to maintain perfusion."
+            }
+          }
+        ]
+      },
+
+      "Paediatric_Trauma_Arrest": {
+        "cpg_reference": "CPG_RES_TRAUMA",
+        "demographics": {
+          "ages": [5, 8, 12],
+          "scenarios": [
+              {"mechanism": "Pedestrian vs Car", "injury": "Multi-system trauma", "rhythm": "PEA"},
+              {"mechanism": "Crush Injury", "injury": "Internal bleeding", "rhythm": "Asystole"}
+          ]
+        },
+        "logic_rules": [
+          {
+            "action": "Fluid Bolus 10-20ml/kg",
+            "type": "Drug",
+            "note": "Careful titration in trauma",
+            "logic_check": "Dose matches weight",
+            "physiological_response": {
+              "message": "Fluid bolus delivered. Reassessing perfusion."
+            }
+          },
+          {
+            "action": "Splinting Fractures",
+            "type": "Skill",
+            "physiological_response": {
+              "message": "Fractures stabilized to reduce bleeding."
+            }
+          }
+        ]
+      },
+
+      "Newborn_Trauma": {
+        "cpg_reference": "CPG_RES_TRAUMA / PAED",
+        "demographics": {
+           "age": "2 weeks",
+           "scenario": "MVA - Infant in capsule (Rapid Deceleration)",
+           "injury": "Head Strike / Chest bruising"
+        },
+        "logic_rules": [
+          {
+            "action": "Immobilisation",
+            "type": "Skill",
+            "note": "Pediatric/Infant specific immobilization",
+            "physiological_response": {
+               "message": "C-Spine protected manually. Infant kept warm."
+            }
+          },
+           {
+            "action": "Ventilation Support",
+            "type": "Skill",
+            "logic_check": "Apnoeic or Bradycardic",
+            "physiological_response": {
+               "message": "Ventilation priority. HR responding."
+            }
+          }
+        ]
+      }
+    }
+  }
+}

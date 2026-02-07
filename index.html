@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPPDP Lite - Clinical Simulator</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #004a99; text-align: center; }
+        .hidden { display: none; }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background: #004a99; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #000; color: #00ff00; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; }
+        .ecg-box { width: 100%; margin: 15px 0; border: 2px solid #ddd; }
+        .q-box { margin-top: 20px; padding: 15px; border-left: 4px solid #004a99; background: #f9f9f9; }
+        textarea { width: 100%; height: 80px; margin-top: 10px; border-radius: 4px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <h1>SPPDP Lite</h1>
+    
+    <div id="selection-screen">
+        <p>Select a Phase to begin training:</p>
+        <button class="btn" onclick="loadBatch(1)">Phase 1: Resuscitation (Wk 1-2)</button>
+        <button class="btn" onclick="loadBatch(2)">Phase 2: Medical (Wk 6-12)</button>
+        <button class="btn" onclick="loadBatch(3)">Phase 3: Trauma/Neuro (Wk 13-23)</button>
+        <button class="btn" onclick="loadBatch(4)">Phase 4: Toxicology (Wk 37-45)</button>
+    </div>
+
+    <div id="sim-screen" class="hidden">
+        <h3 id="scenario-title">Patient Presentation</h3>
+        <div id="scene-description"></div>
+        
+        <div class="vitals-grid" id="vitals">
+            <div>HR: <span id="v-hr">--</span></div>
+            <div>BP: <span id="v-bp">--/--</span></div>
+            <div>SpO2: <span id="v-spo2">--%</span></div>
+            <div>GCS: <span id="v-gcs">--</span></div>
+        </div>
+
+        <img id="ecg-display" class="ecg-box hidden" src="" alt="ECG Strip">
+
+        <div id="question-area" class="q-box">
+            <p id="current-question-text"></p>
+            <textarea id="answer-input" placeholder="Type your response here..."></textarea>
+            <button class="btn" onclick="nextQuestion()">Submit Answer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentBatchData = null;
+    let currentScenario = null;
+    let questionStep = 0;
+
+    // These match the questions we designed
+    const questions = [
+        "1. Identify scene hazards and how you would address them.",
+        "2. Any clarifying questions or further assessments needed?",
+        "3. What is your provisional diagnosis?",
+        "4. Justify your provisional diagnosis.",
+        "5. What differential diagnosis have you discarded?",
+        "6. What is your treatment/intervention plan?",
+        "7. What is your extrication plan?",
+        "8. What is your disposition plan?"
+    ];
+
+    async function loadBatch(batchNum) {
+        try {
+            const response = await fetch(`logic/logic_map_batch${batchNum}.json`);
+            currentBatchData = await response.json();
+            startRandomScenario();
+        } catch (e) {
+            alert("Error loading logic file. Ensure the 'logic' folder exists and contains the .json files.");
+        }
+    }
+
+    function startRandomScenario() {
+        // Simple logic to pick a random week/branch from the JSON
+        const keys = Object.keys(currentBatchData);
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        const weekData = currentBatchData[randomKey];
+        
+        // Handle Master Randomizer Branches
+        if (weekData.branches) {
+            const randomBranch = weekData.branches[Math.floor(Math.random() * weekData.branches.length)];
+            currentScenario = weekData.logic_map[randomBranch];
+        } else {
+            currentScenario = weekData;
+        }
+
+        displayScenario();
+    }
+
+    function displayScenario() {
+        document.getElementById('selection-screen').classList.add('hidden');
+        document.getElementById('sim-screen').classList.remove('hidden');
+        
+        // Show Scene Text
+        document.getElementById('scene-description').innerText = currentScenario.demographics?.scenario || "Scenario loading...";
+        
+        // Show Questions
+        questionStep = 0;
+        updateQuestion();
+    }
+
+    function updateQuestion() {
+        document.getElementById('current-question-text').innerText = questions[questionStep];
+        document.getElementById('answer-input').value = "";
+    }
+
+    function nextQuestion() {
+        questionStep++;
+        if (questionStep < questions.length) {
+            updateQuestion();
+        } else {
+            alert("Scenario phase complete. Proceeding to Physiological Response...");
+            // Logic for Phase 2 (Consequences) goes here in next update!
+        }
+    }
+</script>
+
+</body>
+</html>
