@@ -9,7 +9,11 @@
           "scenario": "A 66-year-old female complaining of epigastric burning and nausea. History of Type 2 Diabetes.",
           "vitals": { "hr": 92, "bp": "145/90", "spO2": 95, "gcs": 15 },
           "ecg_image": "stemi_inferior.jpg"
-        }
+        },
+        "logic_rules": [
+          { "action": "Aspirin 300mg", "type": "Drug", "contraindications": ["Allergy", "Active Bleed"] },
+          { "action": "GTN 400mcg", "type": "Drug", "logic_check": "SBP > 100" }
+        ]
       },
       "Adult_Arrhythmia": {
         "demographics": {
@@ -42,15 +46,19 @@
     "logic_map": {
       "Adult_COPD": {
         "demographics": {
-          "scenario": "A 78-year-old male with increased dyspnoea. Home O2 user.",
-          "vitals": { "hr": 110, "bp": "150/95", "spO2": 84, "gcs": 14 }
-        }
+          "scenario": "A 78-year-old male with increased dyspnoea. Home O2 user. Productive cough.",
+          "vitals": { "hr": 112, "bp": "150/95", "spO2": 84, "gcs": 14 }
+        },
+        "logic_rules": [
+          { "action": "Salbutamol 5mg Neb", "type": "Drug" },
+          { "action": "Titrate O2", "type": "Action", "logic_check": "Target 88-92%" }
+        ]
       },
       "Paediatric_Asthma": {
         "demographics": {
           "age": "4 years",
           "scenario": "4-year-old with severe work of breathing. Silent chest on auscultation.",
-          "vitals": { "hr": 165, "bp": "90/60", "spO2": 88, "gcs": 12 }
+          "vitals": { "hr": 168, "bp": "92/58", "spO2": 88, "gcs": 12 }
         }
       }
     }
